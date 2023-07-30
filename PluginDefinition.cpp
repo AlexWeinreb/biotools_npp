@@ -17,6 +17,8 @@
 
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
+#include <string>
+#include <algorithm>
 
 //
 // The plugin data that Notepad++ needs
@@ -58,8 +60,7 @@ void commandMenuInit()
     //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
-    setCommand(0, TEXT("Hello Notepad++"), hello, NULL, false);
-    setCommand(1, TEXT("Hello (with dialog)"), helloDlg, NULL, false);
+    setCommand(0, TEXT("Reverse-Complement"), revcomp, NULL, false);
 }
 
 //
@@ -93,24 +94,116 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //----------------------------------------------//
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
-void hello()
-{
-    // Open a new document
-    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
 
-    // Get the current scintilla
-    int which = -1;
-    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
-    if (which == -1)
+std::string getSelectedText()
+{
+    std::string selectedText;
+
+    // Get a handle to the current Scintilla editor
+    HWND scintillaHandle = (HWND)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, 0);
+
+    // Determine the buffer size needed for the selected text
+    LPARAM length = ::SendMessage(scintillaHandle, SCI_GETSELTEXT, 0, (LPARAM)nullptr);
+
+    if (length > 0)
+    {
+        char* buffer = new char[length + 1];
+        buffer[0] = '\0'; // Ensure the buffer is null-terminated
+
+        // Retrieve the selected text
+        ::SendMessage(scintillaHandle, SCI_GETSELTEXT, 0, (LPARAM)buffer);
+        selectedText = buffer;
+        delete[] buffer;
+    }
+    else {
+        selectedText = "";
+    }
+
+    return selectedText;
+}
+
+void replaceSelection(std::string text)
+{
+    HWND scintillaHandle = (HWND)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, 0);
+    ::SendMessage(scintillaHandle, SCI_REPLACESEL, 0, (LPARAM)text.c_str());
+}
+
+
+bool checkCharacters(std::string seq, std::string charset)
+{
+    if (charset == "DNA")
+    {
+        for (char c: seq)
+        {
+            if (c != 'a' && c != 'c' && c != 't' && c != 'g')
+            {
+                return false;
+            }
+        }
+    }
+    else
+    {
+        // undefined charset
+        return false;
+    }
+    return true;
+}
+
+std::string reverseComplement(std::string seq)
+{
+    std::reverse(seq.begin(), seq.end());
+
+
+    std::string comp;
+    char c;
+    for (int i = 0; i < seq.length(); ++i)
+    {
+        switch (seq[i])
+        {
+        case 'a':
+            c = 't';
+            break;
+        case 'A':
+            c = 'T';
+            break;
+        case 't':
+            c = 'a';
+            break;
+        case 'T':
+            c = 'A';
+            break;
+        case 'c':
+            c = 'g';
+            break;
+        case 'C':
+            c = 'G';
+            break;
+        case 'g':
+            c = 'c';
+            break;
+        case 'G':
+            c = 'C';
+            break;
+        default:
+            c = 'N';
+        }
+        comp += c;
+    }
+    return comp;
+}
+
+void revcomp()
+{
+    std::string selection = getSelectedText();
+    bool check = checkCharacters(selection, "DNA");
+
+    if (!check)
+    {
+        // something went wrong, refuse to work
         return;
-    HWND curScintilla = (which == 0)?nppData._scintillaMainHandle:nppData._scintillaSecondHandle;
-
-    // Say hello now :
-    // Scintilla control has no Unicode mode, so we use (char *) here
-    ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)"Hello, Notepad++!");
+    }
+    std::string revcomp = reverseComplement(selection);
+    replaceSelection(revcomp);
 }
 
-void helloDlg()
-{
-    ::MessageBox(NULL, TEXT("Hello, Notepad++!"), TEXT("Notepad++ Plugin Template"), MB_OK);
-}
+
