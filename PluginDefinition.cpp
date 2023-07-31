@@ -123,8 +123,8 @@ std::string getSelectedText(HWND scintillaHandle)
 
 void replaceSelection(std::string text, HWND scintillaHandle)
 {
-    std::wstring debugMessage = L"Will replace current selection with: " + std::wstring(text.begin(), text.end());
-    OutputDebugString(debugMessage.c_str());
+    /*std::wstring debugMessage = L"Will replace current selection with: " + std::wstring(text.begin(), text.end());
+    OutputDebugString(debugMessage.c_str());*/
 
     ::SendMessage(scintillaHandle, SCI_REPLACESEL, 0, (LPARAM)text.c_str());
 }
@@ -139,9 +139,9 @@ bool checkCharacters(std::string seq, std::string charset)
         {
             if (c != 'a' && c != 'c' && c != 't' && c != 'g')
             {
-                std::string cs(1, c);
+                /*std::string cs(1, c);
                 std::wstring debugMessage = L"Incorrect character: " + std::wstring(cs.begin(), cs.end());
-                OutputDebugString(debugMessage.c_str());
+                OutputDebugString(debugMessage.c_str());*/
                 return false;
             }
         }
@@ -149,8 +149,8 @@ bool checkCharacters(std::string seq, std::string charset)
     else
     {
         // undefined charset
-        std::wstring debugMessage2 = L"Undefined charset: " + std::wstring(charset.begin(), charset.end());
-        OutputDebugString(debugMessage2.c_str());
+        /*std::wstring debugMessage2 = L"Undefined charset: " + std::wstring(charset.begin(), charset.end());
+        OutputDebugString(debugMessage2.c_str());*/
         return false;
     }
     return true;
@@ -197,8 +197,8 @@ std::string reverseComplement(std::string seq)
         comp += c;
     }
 
-    std::wstring debugMessage = L"Finished rev-comp: " + std::wstring(comp.begin(), comp.end());
-    OutputDebugString(debugMessage.c_str());
+    /*std::wstring debugMessage = L"Finished rev-comp: " + std::wstring(comp.begin(), comp.end());
+    OutputDebugString(debugMessage.c_str());*/
 
     return comp;
 }
@@ -217,16 +217,13 @@ void revcomp()
 
     std::string selection = getSelectedText(scintillaHandle);
     
-    std::wstring debugMessage = L"Selected Text: " + std::wstring(selection.begin(), selection.end());
-    OutputDebugString(debugMessage.c_str());
 
     bool check = checkCharacters(selection, "DNA");
 
     if (!check)
     {
-        std::wstring debugMessage2 = L"Something went wrong";
-        OutputDebugString(debugMessage2.c_str());
-        // something went wrong, refuse to work
+        /*std::wstring debugMessage2 = L"Characters were not all recognized, aborting";
+        OutputDebugString(debugMessage2.c_str());*/
         return;
     }
     std::string revcomp = reverseComplement(selection);
