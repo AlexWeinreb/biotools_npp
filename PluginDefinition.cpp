@@ -95,12 +95,11 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
 
-std::string getSelectedText()
+std::string getSelectedText(HWND scintillaHandle)
 {
     std::string selectedText;
 
-    // Get a handle to the current Scintilla editor
-    HWND scintillaHandle = (HWND)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, 0);
+    
 
     // Determine the buffer size needed for the selected text
     LPARAM length = ::SendMessage(scintillaHandle, SCI_GETSELTEXT, 0, (LPARAM)nullptr);
@@ -122,9 +121,11 @@ std::string getSelectedText()
     return selectedText;
 }
 
-void replaceSelection(std::string text)
+void replaceSelection(std::string text, HWND scintillaHandle)
 {
-    HWND scintillaHandle = (HWND)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, 0);
+    std::wstring debugMessage = L"Will replace current selection with: " + std::wstring(text.begin(), text.end());
+    OutputDebugString(debugMessage.c_str());
+
     ::SendMessage(scintillaHandle, SCI_REPLACESEL, 0, (LPARAM)text.c_str());
 }
 
@@ -133,10 +134,14 @@ bool checkCharacters(std::string seq, std::string charset)
 {
     if (charset == "DNA")
     {
+        std::transform(seq.begin(), seq.end(), seq.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
         for (char c: seq)
         {
             if (c != 'a' && c != 'c' && c != 't' && c != 'g')
             {
+                std::string cs(1, c);
+                std::wstring debugMessage = L"Incorrect character: " + std::wstring(cs.begin(), cs.end());
+                OutputDebugString(debugMessage.c_str());
                 return false;
             }
         }
@@ -144,6 +149,8 @@ bool checkCharacters(std::string seq, std::string charset)
     else
     {
         // undefined charset
+        std::wstring debugMessage2 = L"Undefined charset: " + std::wstring(charset.begin(), charset.end());
+        OutputDebugString(debugMessage2.c_str());
         return false;
     }
     return true;
@@ -189,21 +196,41 @@ std::string reverseComplement(std::string seq)
         }
         comp += c;
     }
+
+    std::wstring debugMessage = L"Finished rev-comp: " + std::wstring(comp.begin(), comp.end());
+    OutputDebugString(debugMessage.c_str());
+
     return comp;
 }
 
 void revcomp()
 {
-    std::string selection = getSelectedText();
+
+    // Get a handle to the current Scintilla editor
+    int which = -1;
+    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
+    if (which == -1)
+        return ;
+
+    HWND scintillaHandle = (which == 0) ? nppData._scintillaMainHandle : nppData._scintillaSecondHandle;
+
+
+    std::string selection = getSelectedText(scintillaHandle);
+    
+    std::wstring debugMessage = L"Selected Text: " + std::wstring(selection.begin(), selection.end());
+    OutputDebugString(debugMessage.c_str());
+
     bool check = checkCharacters(selection, "DNA");
 
     if (!check)
     {
+        std::wstring debugMessage2 = L"Something went wrong";
+        OutputDebugString(debugMessage2.c_str());
         // something went wrong, refuse to work
         return;
     }
     std::string revcomp = reverseComplement(selection);
-    replaceSelection(revcomp);
+    replaceSelection(revcomp, scintillaHandle);
 }
 
 
