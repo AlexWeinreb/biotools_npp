@@ -61,6 +61,7 @@ void commandMenuInit()
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
     setCommand(0, TEXT("Reverse-Complement"), revcomp, NULL, false);
+    setCommand(1, TEXT("Translate"), translate, NULL, false);
 }
 
 //
@@ -137,7 +138,7 @@ bool checkCharacters(std::string seq, std::string charset)
         std::transform(seq.begin(), seq.end(), seq.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
         for (char c: seq)
         {
-            if (c != 'a' && c != 'c' && c != 't' && c != 'g')
+            if (c != 'a' && c != 'c' && c != 't' && c != 'g' && c != ' ')
             {
                 /*std::string cs(1, c);
                 std::wstring debugMessage = L"Incorrect character: " + std::wstring(cs.begin(), cs.end());
@@ -230,4 +231,252 @@ void revcomp()
     replaceSelection(revcomp, scintillaHandle);
 }
 
+std::string translateDNA(std::string seq)
+{
 
+    std::transform(seq.begin(), seq.end(), seq.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+
+    std::string translation;
+    std::string codon;
+    for (int i = 0; i < seq.length() / 3; ++i)
+    {
+        
+        codon = seq.substr(i*3, 3);
+
+        /* Code written with R:
+        * Biostrings::GENETIC_CODE |>
+              purrr::imap(~paste0('if(codon == "',.y, '"){
+                                  translation += "',.x,'";
+                                }')) |>
+              paste0(collapse = "\n") |>
+              clipr::write_clip()
+        */
+
+        if (codon == "TTT") {
+            translation += "F";
+        }
+        if (codon == "TTC") {
+            translation += "F";
+        }
+        if (codon == "TTA") {
+            translation += "L";
+        }
+        if (codon == "TTG") {
+            translation += "L";
+        }
+        if (codon == "TCT") {
+            translation += "S";
+        }
+        if (codon == "TCC") {
+            translation += "S";
+        }
+        if (codon == "TCA") {
+            translation += "S";
+        }
+        if (codon == "TCG") {
+            translation += "S";
+        }
+        if (codon == "TAT") {
+            translation += "Y";
+        }
+        if (codon == "TAC") {
+            translation += "Y";
+        }
+        if (codon == "TAA") {
+            translation += "*";
+        }
+        if (codon == "TAG") {
+            translation += "*";
+        }
+        if (codon == "TGT") {
+            translation += "C";
+        }
+        if (codon == "TGC") {
+            translation += "C";
+        }
+        if (codon == "TGA") {
+            translation += "*";
+        }
+        if (codon == "TGG") {
+            translation += "W";
+        }
+        if (codon == "CTT") {
+            translation += "L";
+        }
+        if (codon == "CTC") {
+            translation += "L";
+        }
+        if (codon == "CTA") {
+            translation += "L";
+        }
+        if (codon == "CTG") {
+            translation += "L";
+        }
+        if (codon == "CCT") {
+            translation += "P";
+        }
+        if (codon == "CCC") {
+            translation += "P";
+        }
+        if (codon == "CCA") {
+            translation += "P";
+        }
+        if (codon == "CCG") {
+            translation += "P";
+        }
+        if (codon == "CAT") {
+            translation += "H";
+        }
+        if (codon == "CAC") {
+            translation += "H";
+        }
+        if (codon == "CAA") {
+            translation += "Q";
+        }
+        if (codon == "CAG") {
+            translation += "Q";
+        }
+        if (codon == "CGT") {
+            translation += "R";
+        }
+        if (codon == "CGC") {
+            translation += "R";
+        }
+        if (codon == "CGA") {
+            translation += "R";
+        }
+        if (codon == "CGG") {
+            translation += "R";
+        }
+        if (codon == "ATT") {
+            translation += "I";
+        }
+        if (codon == "ATC") {
+            translation += "I";
+        }
+        if (codon == "ATA") {
+            translation += "I";
+        }
+        if (codon == "ATG") {
+            translation += "M";
+        }
+        if (codon == "ACT") {
+            translation += "T";
+        }
+        if (codon == "ACC") {
+            translation += "T";
+        }
+        if (codon == "ACA") {
+            translation += "T";
+        }
+        if (codon == "ACG") {
+            translation += "T";
+        }
+        if (codon == "AAT") {
+            translation += "N";
+        }
+        if (codon == "AAC") {
+            translation += "N";
+        }
+        if (codon == "AAA") {
+            translation += "K";
+        }
+        if (codon == "AAG") {
+            translation += "K";
+        }
+        if (codon == "AGT") {
+            translation += "S";
+        }
+        if (codon == "AGC") {
+            translation += "S";
+        }
+        if (codon == "AGA") {
+            translation += "R";
+        }
+        if (codon == "AGG") {
+            translation += "R";
+        }
+        if (codon == "GTT") {
+            translation += "V";
+        }
+        if (codon == "GTC") {
+            translation += "V";
+        }
+        if (codon == "GTA") {
+            translation += "V";
+        }
+        if (codon == "GTG") {
+            translation += "V";
+        }
+        if (codon == "GCT") {
+            translation += "A";
+        }
+        if (codon == "GCC") {
+            translation += "A";
+        }
+        if (codon == "GCA") {
+            translation += "A";
+        }
+        if (codon == "GCG") {
+            translation += "A";
+        }
+        if (codon == "GAT") {
+            translation += "D";
+        }
+        if (codon == "GAC") {
+            translation += "D";
+        }
+        if (codon == "GAA") {
+            translation += "E";
+        }
+        if (codon == "GAG") {
+            translation += "E";
+        }
+        if (codon == "GGT") {
+            translation += "G";
+        }
+        if (codon == "GGC") {
+            translation += "G";
+        }
+        if (codon == "GGA") {
+            translation += "G";
+        }
+        if (codon == "GGG") {
+            translation += "G";
+        }
+    }
+    return translation;
+}
+
+void translate()
+{
+    // Get a handle to the current Scintilla editor
+    int which = -1;
+    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
+    if (which == -1)
+        return;
+
+    HWND scintillaHandle = (which == 0) ? nppData._scintillaMainHandle : nppData._scintillaSecondHandle;
+
+
+    std::string selection = getSelectedText(scintillaHandle);
+
+
+    bool check = checkCharacters(selection, "DNA");
+
+    if (!check)
+    {
+        /*std::wstring debugMessage2 = L"Characters were not all recognized, aborting";
+        OutputDebugString(debugMessage2.c_str());*/
+        return;
+    }
+    if (selection.length() % 3 != 0)
+    {
+        /*std::wstring debugMessage2 = L"Selection not a multiple of 3, aborting";
+        OutputDebugString(debugMessage2.c_str());*/
+        return;
+    }
+
+    std::string translation = translateDNA(selection);
+    replaceSelection(translation, scintillaHandle);
+}
