@@ -164,7 +164,7 @@ std::string reverseComplement(std::string seq)
 
     std::string comp;
     char c;
-    for (int i = 0; i < seq.length(); ++i)
+    for (size_t i = 0; i < seq.length(); ++i)
     {
         switch (seq[i])
         {
@@ -238,7 +238,7 @@ std::string translateDNA(std::string seq)
 
     std::string translation;
     std::string codon;
-    for (int i = 0; i < seq.length() / 3; ++i)
+    for (size_t i = 0; i < seq.length() / 3; ++i)
     {
         
         codon = seq.substr(i*3, 3);
@@ -481,7 +481,7 @@ void translate()
     replaceSelection(translation, scintillaHandle);
 }
 
-char* getText(HWND sciHandle, int start_pos, int end_pos)
+char* getText(HWND sciHandle, size_t start_pos, size_t end_pos)
 {
     Sci_TextRangeFull tr;
     tr.chrg.cpMin = start_pos;
@@ -528,15 +528,16 @@ void nextORF(){
     */
 
 
-    int selStart = (int)::SendMessage(scintillaHandle, SCI_GETSELECTIONSTART, 0, 0);
-    int selEnd = (int)::SendMessage(scintillaHandle, SCI_GETSELECTIONEND, 0, 0);
+    size_t selStart = (size_t)::SendMessage(scintillaHandle, SCI_GETSELECTIONSTART, 0, 0);
+    size_t selEnd = (size_t)::SendMessage(scintillaHandle, SCI_GETSELECTIONEND, 0, 0);
 
     if (selEnd == selStart)
     {
-        selEnd = (int)::SendMessage(scintillaHandle, SCI_GETTEXTLENGTH, 0, 0);
+        selEnd = (size_t)::SendMessage(scintillaHandle, SCI_GETTEXTLENGTH, 0, 0);
     }
 
     std::string selText = getText(scintillaHandle, selStart, selEnd);
+    std::transform(selText.begin(), selText.end(), selText.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
     
 
     bool check = checkCharacters(selText, "DNA");
