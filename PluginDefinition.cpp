@@ -62,6 +62,7 @@ void commandMenuInit()
     //            );
     setCommand(0, TEXT("Reverse-Complement"), revcomp, NULL, false);
     setCommand(1, TEXT("Translate"), translate, NULL, false);
+    setCommand(2, TEXT("Next ORF"), nextORF, NULL, false);
 }
 
 //
@@ -100,7 +101,6 @@ std::string getSelectedText(HWND scintillaHandle)
 {
     std::string selectedText;
 
-    
 
     // Determine the buffer size needed for the selected text
     LPARAM length = ::SendMessage(scintillaHandle, SCI_GETSELTEXT, 0, (LPARAM)nullptr);
@@ -479,4 +479,98 @@ void translate()
 
     std::string translation = translateDNA(selection);
     replaceSelection(translation, scintillaHandle);
+}
+
+char* getText(HWND sciHandle, int start_pos, int end_pos)
+{
+    Sci_TextRangeFull tr;
+    tr.chrg.cpMin = start_pos;
+    tr.chrg.cpMax = end_pos;
+    tr.lpstrText = new char[end_pos - start_pos + 1];
+
+    ::SendMessage(sciHandle, SCI_GETTEXTRANGEFULL, 0, (LPARAM)&tr);
+
+    return(tr.lpstrText);
+}
+
+size_t nextStartCodon(std::string text)
+{
+    // find the position of the first start codon
+    size_t pos = text.find("ATG");
+    return(pos);
+}
+
+size_t nextStopCodon(std::string text, size_t pos_start)
+{
+    // find position of next stop codon
+    text = text.substr(pos_start, text.length());
+    std::string translation = translateDNA(text);
+
+    size_t pos = translation.find("*");
+    return( pos_start + 3*(pos+1) );
+}
+
+
+void nextORF(){
+
+    // Get a handle to the current Scintilla editor
+    int which = -1;
+    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
+    if (which == -1)
+        return;
+
+    HWND scintillaHandle = (which == 0) ? nppData._scintillaMainHandle : nppData._scintillaSecondHandle;
+
+
+    /* Two cases
+    * if text is selected, look for ORF inside it
+    * if no text selected, look for ORF between current cursor position and end of document
+    */
+
+
+    int selStart = (int)::SendMessage(scintillaHandle, SCI_GETSELECTIONSTART, 0, 0);
+    int selEnd = (int)::SendMessage(scintillaHandle, SCI_GETSELECTIONEND, 0, 0);
+
+    if (selEnd == selStart)
+    {
+        selEnd = (int)::SendMessage(scintillaHandle, SCI_GETTEXTLENGTH, 0, 0);
+    }
+
+    std::string selText = getText(scintillaHandle, selStart, selEnd);
+    
+
+    bool check = checkCharacters(selText, "DNA");
+
+    if (!check)
+    {
+        std::wstring debugMessage2 = L"Characters were not all recognized, aborting";
+        OutputDebugString(debugMessage2.c_str());
+        return;
+    }
+    
+    
+    size_t posStart = nextStartCodon(selText);
+    size_t posStop = nextStopCodon(selText, posStart);
+
+    // back to document coords
+    posStart = posStart + selStart;
+    posStop = posStop + selStart;
+
+    if (posStop == selStart)
+    {
+        posStop = selEnd;
+    }
+
+
+    ::SendMessage(scintillaHandle, SCI_SETSEL, posStart, posStop);
+
+
+    
+    
+    /*std::string posstr = " --- start: " + std::to_string(posStart) +
+                         " -- end: "+std::to_string(posStop)+" --- ";
+    replaceSelection(posstr, scintillaHandle);
+    */
+
+
 }
